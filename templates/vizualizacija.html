@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vizualizacija fotografa</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        nav {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Početna</a>
+        <a href="/dodaj_fotografa">Dodaj Fotografa</a>
+        <a href="/popis_fotografa">Popis Fotografa</a>
+        <a href="/vizualizacija">Vizualizacija</a>
+    </nav>
+    <div class="container">
+        <h1>Vizualizacija fotografa</h1>
+        <canvas id="myChartOcjena" width="400" height="200"></canvas>
+        <canvas id="myChartCijena" width="400" height="200"></canvas>
+        <canvas id="myChartVrsta" width="400" height="200"></canvas>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctxOcjena = document.getElementById('myChartOcjena').getContext('2d');
+            const ctxCijena = document.getElementById('myChartCijena').getContext('2d');
+            const ctxVrsta = document.getElementById('myChartVrsta').getContext('2d');
+
+            fetch('/api/fotografi')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    new Chart(ctxOcjena, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(fotograf => fotograf.ime + ' ' + fotograf.prezime),
+                            datasets: [{
+                                label: 'Ocjena',
+                                data: data.map(fotograf => fotograf.ocjena),
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    new Chart(ctxCijena, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(fotograf => fotograf.ime + ' ' + fotograf.prezime),
+                            datasets: [{
+                                label: 'Cijena',
+                                data: data.map(fotograf => fotograf.cijena),
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    const vrste = {};
+                    data.forEach(fotograf => {
+                        if (!vrste[fotograf.vrsta]) {
+                            vrste[fotograf.vrsta] = 1;
+                        } else {
+                            vrste[fotograf.vrsta]++;
+                        }
+                    });
+                    new Chart(ctxVrsta, {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(vrste),
+                            datasets: [{
+                                label: 'Broj fotografa po vrsti',
+                                data: Object.values(vrste),
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.2)',
+                                    'rgba(54, 162, 235, 0.2)',
+                                    'rgba(255, 206, 86, 0.2)',
+                                    'rgba(75, 192, 192, 0.2)',
+                                    'rgba(153, 102, 255, 0.2)',
+                                    'rgba(255, 159, 64, 0.2)'
+                                ],
+                                borderColor: [
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(153, 102, 255, 1)',
+                                    'rgba(255, 159, 64, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+        });
+    </script>
+</body>
+</html>

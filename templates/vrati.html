@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popis fotografa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            border-bottom: 1px solid #ddd;
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        form {
+            display: inline-block;
+        }
+        input[type="submit"],
+        .obrisi-button,
+        .uredi-button {
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"] {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .obrisi-button {
+            background-color: darkred;
+            color: white;
+        }
+        .uredi-button {
+            background-color: blue;
+            color: white;
+        }
+        .sort-select,
+        .search-input {
+            background-color: white;
+            color: black;
+            border: 1px solid black;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        nav {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="/">Početna</a>
+    <a href="/dodaj_fotografa">Dodaj Fotografa</a>
+    <a href="/popis_fotografa?sort=cijena_desc">Popis Fotografa</a>
+    <a href="/vizualizacija">Vizualizacija</a>
+</nav>
+<div class="container">
+    <h1>Popis fotografa</h1>
+    <input type="text" id="search-input" class="search-input" placeholder="Pretraži fotografa..." onkeydown="if (event.keyCode == 13) pretraziFotografa()">
+    <select id="sort-select" class="sort-select" onchange="sortirajPopis()">
+        <option value="cijena_asc">Sortiraj po cijeni (najmanje-najveće)</option>
+        <option value="cijena_desc">Sortiraj po cijeni (najveće-najmanje)</option>
+        <option value="ocjena_asc">Sa nižom ocjenom</option>
+        <option value="ocjena_desc">Sa višom ocjenom</option>
+    </select>
+    <ul id="fotografi-list">
+        {% for fotografija in data %}
+        <li>
+            <div>
+                <strong>{{ fotografija.ime }} {{ fotografija.prezime }}</strong><br>
+                Vrsta fotografije: {{ fotografija.vrsta }}<br>
+                Detalji: {{ fotografija.detalji }}<br>
+                Portfolio: <a href="{{ fotografija.portfolio }}" target="_blank">{{ fotografija.portfolio }}</a><br>
+                Cijena: {{ fotografija.cijena }} €<br>
+                Ocjena: {{ fotografija.ocjena }}
+            </div>
+            <div>
+                <form id="deleteForm-{{ fotografija.id }}" action="/fotografija/{{ fotografija.id }}" method="POST">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="button" class="obrisi-button" onclick="potvrdiBrisanje({{ fotografija.id }})">Obriši fotografa</button>
+                </form>
+                <form action="/uredi_fotografa/{{ fotografija.id }}" method="GET">
+                    <button type="submit" class="uredi-button">Uredi</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let urlParams = new URLSearchParams(window.location.search);
+        let sortOption = urlParams.get('sort');
+        if (sortOption) {
+            let sortSelect = document.getElementById('sort-select');
+            sortSelect.value = sortOption;
+        }
+    });
+
+    function sortirajPopis() {
+        let sortOption = document.getElementById('sort-select').value;
+        window.location.href = "/popis_fotografa?sort=" + sortOption;
+    }
+
+    function pretraziFotografa() {
+        let searchInput = document.getElementById('search-input').value;
+        window.location.href = "/popis_fotografa?search=" + encodeURIComponent(searchInput);
+    }
+
+    function potvrdiBrisanje(fotografijaId) {
+        if (confirm("Jeste li sigurni da želite obrisati ovog fotografa?")) {
+            const form = document.getElementById('deleteForm-' + fotografijaId);
+            fetch(form.action, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        throw new Error('Neuspješno brisanje fotografa');
+                    }
+                })
+                .catch(error => {
+                    console.error('Greška pri brisanju fotografa:', error);
+                    alert('Došlo je do greške prilikom brisanja fotografa.');
+                });
+        }
+    }
+</script>
+</body>
+</html>
